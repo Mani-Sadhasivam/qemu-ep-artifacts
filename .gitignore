@@ -1,0 +1,7 @@
+# Created by build.sh
+/src/
+/out/
+/rootfs/
+
+# The built artifact is published as a release asset, not committed
+*.tar.xz

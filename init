@@ -1,0 +1,28 @@
+#!/bin/busybox sh
+#
+# Minimal init for the QEMU pcie-ep functional test rootfs.
+#
+# Responsibilities are deliberately limited to generic bring-up: install the
+# busybox applet symlinks, mount the pseudo filesystems the test needs, and
+# hand a shell to the serial console. All PCIe Endpoint specific steps live in
+# the QEMU test (tests/functional/aarch64/test_pcie_ep.py) so that the test is
+# readable on its own.
+
+/bin/busybox --install -s /bin
+
+mount -t proc     none /proc
+mount -t sysfs    none /sys
+mount -t devtmpfs none /dev
+
+mkdir -p /sys/kernel/config
+mount -t configfs none /sys/kernel/config
+
+# Keep kernel messages from interleaving with the shell prompt.
+echo 4 > /proc/sys/kernel/printk
+
+# Wide terminal so that long command lines are not wrapped in the test logs.
+stty cols 200 rows 50 2>/dev/null
+
+export PS1='ep-sh# '
+echo EP_GUEST_READY
+exec /bin/sh -i
