@@ -29,12 +29,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # libc6-dev-arm64-cross is only a Recommends of gcc-aarch64-linux-gnu, so
+      # it has to be named here. Without the sysroot headers the cross compiler
+      # falls back to the host /usr/include and the static selftest link fails
+      # on a missing bits/wordsize.h.
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            bc bison cpio flex gcc-aarch64-linux-gnu libelf-dev libssl-dev \
-            xz-utils
+            bc bison cpio flex gcc-aarch64-linux-gnu libc6-dev-arm64-cross \
+            libelf-dev libssl-dev xz-utils
 
       - name: Build the artifact
         run: ./build.sh
