@@ -1,0 +1,61 @@
+# Build the guest kernel and root filesystem and publish the tarball as a
+# release asset.
+#
+# The QEMU functional test that consumes this tarball pins both its download
+# URL and its sha256, so an asset that has already been referenced upstream
+# must keep serving the same bytes. The upload step therefore does not pass
+# --clobber: re-running the workflow against a tag that already carries the
+# asset fails instead of silently replacing it. Publish a new build under a
+# new tag.
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+
+name: build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to publish the artifact under'
+        required: true
+        default: build
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison cpio flex gcc-aarch64-linux-gnu libelf-dev libssl-dev \
+            xz-utils
+
+      - name: Build the artifact
+        run: ./build.sh
+
+      - name: Publish the release asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          cd out
+          sha256sum pcie-ep-stack.tar.xz > pcie-ep-stack.tar.xz.sha256
+          gh release view "$TAG" >/dev/null 2>&1 ||
+            gh release create "$TAG" \
+              --title "PCIe Endpoint test artifact" \
+              --notes "Guest kernel and root filesystem for the QEMU functional test tests/functional/aarch64/test_pcie_ep.py. Built by .github/workflows/build.yml from build.sh."
+          gh release upload "$TAG" \
+            pcie-ep-stack.tar.xz pcie-ep-stack.tar.xz.sha256
+          {
+            echo '## Artifact'
+            echo
+            echo '```'
+            cat pcie-ep-stack.tar.xz.sha256
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -23,7 +23,7 @@ set -eu
 
 # Linux 7.1-rc4 plus the Endpoint Controller driver for pcie-ep-ctrl.
 LINUX_URL=https://github.com/Mani-Sadhasivam/linux.git
-LINUX_COMMIT=d23bc106b79579ddb979be6b141e71712a70acfa
+LINUX_COMMIT=ed07242cb2e87bb3f72500949f3449febcec6210
 
 BUSYBOX_VERSION=1.37.0
 BUSYBOX_URL=https://busybox.net/downloads/busybox-$BUSYBOX_VERSION.tar.bz2
